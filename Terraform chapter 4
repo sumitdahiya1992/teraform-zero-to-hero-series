@@ -1,0 +1,63 @@
+Resources
+
+other examples of Resources
+
+code 1
+
+resource "aws_s3_bucket" "first_bucket" {
+  bucket = "hariom12380-first-bucket"
+}
+
+code 2
+
+resource "google_folder" "department" {
+  display_name = "Department"
+  parent = "organisation/1234567"
+}
+
+code 3
+
+resource "postgresql_role" "my_role" {
+  name = "my_role"
+  login = true
+  password = "password123"
+}
+
+code 4
+
+resource "aws_s3_bucket" "first_bucket" {
+  bucket = "arun12380-first-bucket"
+  acl = "Private"
+
+  versioning {
+    enabled = true
+    mfa_delete = false
+  }
+}
+
+code 5
+try this code as example in chapter 3
+
+provider "aws" {
+  region = "us-east-1"
+}
+
+resource "aws_s3_bucket" "first_bucket" {
+  bucket = "hariom12380-first-bucket"
+}
+
+resource "aws_s3_bucket" "second_bucket" {
+  bucket = "arun12380-second-bucket"
+  acl = "private"
+
+  versioning {
+    enabled = true
+    mfa_delete = false
+  }
+}
+
+copy the above code main.tf file....then terraform apply
+........
+
+code 6
+mkdir chapter4
