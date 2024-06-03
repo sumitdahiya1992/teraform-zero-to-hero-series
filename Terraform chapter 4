@@ -61,3 +61,89 @@ copy the above code main.tf file....then terraform apply
 
 code 6
 mkdir chapter4
+vim main.tf
+
+example 1
+
+resource "aws_security_group" "my_security_group" {
+  name = "allow_tls"
+  ingress {
+    protocol = "tcp"
+    from_port = 443
+    to_port = 443
+    cidr_block = ["10.0.0.0/16", "11.0.0.0/16"]
+  }
+}
+............................note........................
+
+The neat thing about using interpolation syntax to reference the attribute of a resource in another
+resource is that it allows Terraform to work out the dependency order of the resources. From our
+HCL above Terraform can determine that first it needs to create the VPC because it needs the id
+that AWS assigns to the VPC in order to create the security group. It then knows that it needs to
+create the security group next as it needs the id of the security group in order to create the security
+group rule. Terraform uses this information to build up a dependency graph and then tries to run in
+parallel as much as possible.
+example 2 depands on example 1.....
+............................note........................
+example 2
+
+provider "aws" {
+        region = "us-east-1"
+}
+
+resource "aws_vpc" "my_vpc" {
+        cidr_block = "10.0.0.0/16"
+}
+
+resource "aws_security_group" "my_security_group" {
+        vpc_id = aws_vpc.my_vpc.id
+        name = "Example security group"
+}
+
+resource "aws_security_group_rule" "tls_in" {
+        protocol = "tcp"
+        security_group_id = aws_security_group.my_security_group.id
+        from_port = 443
+        to_port = 443
+        type = "ingress"
+        cidr_blocks = ["0.0.0.0/0"]
+}
+
+resource "aws_security_group_rule" "http_in" {
+        protocol = "tcp"
+        security_group_id = aws_security_group.my_security_group.id
+        from_port = 80
+        to_port = 80
+        type = "ingress"
+        cidr_blocks = ["0.0.0.0/0"]
+}
+
+resource "aws_s3_bucket" "first_bucket" {
+	bucket = "hariom12380-first-bucket"
+}
+
+resource "aws_s3_bucket" "second_bucket" {
+	bucket = "arun12380-second-bucket"
+	acl = "private"
+
+	versioning {
+	  enabled = true
+	  mfa_delete = false
+	}
+}
+
+..........................note...................................
+When you run the project with Terraform, you will realise that it can create both security group
+rules in parallel. Once the security group they both depend on is created, it will be able to create both
+of the rules together. This feature of Terraform makes performance very good. It may seem quite
+obvious in this example but as a project grows it can be quite impressive at how much Terraform
+can run in parallel.
+..........................note...................................
+..........................note...................................
+i am also add s3 resource in this code ......u will see S3 bucket created in a given time.....
+
+this a power of terraform
+..........................note...................................
+
+
+chapter 4 ends
