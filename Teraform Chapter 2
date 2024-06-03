@@ -40,4 +40,12 @@ copy it save it in your system....
 Access key           ....................... 
 Secret access key    .......................
 
+SETUP AN AWS CREDENTIALS FILE
+using AWS CLI
+command type in linux
+aws configure
+enter access key > enter
+enter secret access key > enter
+default region > enter
+output > enter
 
