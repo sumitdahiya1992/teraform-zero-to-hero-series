@@ -1,0 +1,40 @@
+your first terraform Project
+
+setting up your first project
+create a folder in which u want to create your first project
+in my case
+/github/teraaform
+create a folder/dir ( my system is linux based )
+mkdir myfirstterraformproject
+inside folder/dir create file named main.tf
+and paste the following code in it
+
+code
+
+provider "aws" {
+  region = "us-east-1"
+}
+
+resource "aws_s3_bucket" "first_bucket" {
+  bucket = "hariom12380-first-bucket"
+}
+
+code
+
+in the same dir in whuch main.tf is saved
+
+run the following command: 
+terraform init
+
+you will see some output on the scree as terraform initialises,
+then you should see the message TERRAFORM HAS BEEN SUCCESSFULLY INITIALIZED
+
+RUN THE FOLLOWING COMMAND
+
+terraform apply
+
+after this command . you will see in a aws account in s3 bucket section....
+there you will see a bucket which has a name hariom12380 name in it
+
+
+chapter 3 ends.....
