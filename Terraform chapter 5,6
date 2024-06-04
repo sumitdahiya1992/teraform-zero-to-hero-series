@@ -1,0 +1,140 @@
+chapter 5
+
+code
+
+provider "aws" {
+  region = "us-east-1"
+}
+
+code
+
+code
+
+provider "aws" {
+  region = "us-east-1"
+  version = "~> 2.27"
+}
+
+code
+
+MORE THAN ONE INSTANCE OF THE SAME PROVIDER
+
+CODE
+
+provider "aws" {
+  region = "us-east-1"
+  version = "~> 2.27"
+}
+
+provider "aws" {
+  region = "us-east-2"
+  alias = "london"
+  version = "~> 2.27"
+}
+
+resource "aws_vpc" "ireland_vpc" {
+  cidr_block = "10.0.0.0/16"           ...note... aws vpc resource automatic attached with us-east-1 thats a default setting...note...
+}
+
+resource "aws_vpc" "london_vpc" {
+  cidr_block = "10.0.0.0/16"
+  provider = "aws.london"              ...note... aws vpc resource attached with us-east-2 because provider is mentioned here aws.london...note...
+}
+
+CODE
+..................................note..................................
+As you can see we are defining two instances of the AWS provider. The once pointing at the region
+eu-west-1 and once at the region eu-west-2. For the one that is pointing at eu-west-2 you will notice
+that we are setting the alias property to london. Alias is a property you can set on any provider
+block, it is no way special to the aws provider. What this gives us is a way to distinguish between the
+two providers. Once you define two or more instances of the same provider every definition after
+the first must have an alias set.
+
+After we have defined the two AWS providers we are creating a VPC called ireland_vpc, with the
+CIDR block 10.0.0.0/16. As we have not told Terraform which provider instance to use for this
+resource Terraform will pick the instance of the AWS provider where you have not defined an alias.
+Which means that this VPC will be created in the region eu-west-1 (Ireland). The second VPC we
+have defined with the identifier london_vpc has a CIDR block of 10.1.0.0/16. This time we have
+set the provider property on the resource to aws.london. This means that terraform will use our
+second AWS provider which points to the region eu-west-2, so when we run the project by doing
+terraform apply this VPC will be created in eu-west-2
+..................................note..................................
+
+CHAPTER 6 DATA SOURCES
+
+A data source in Terraform is used to fetch data from a resource that is not managed by the current
+Terraform project, so that value can be used in the current Terraform project. You can sort of think of
+it as a read only resource that already exists. The object exists but you want to read some properties
+of that object for use in your project.
+
+code
+
+provider "aws" {
+  region  = "us-east-2"
+  version = "~> 2.27"
+}
+
+data "aws_s3_bucket" "bucket" {
+  bucket = "hariom12380"
+}
+
+resource "aws_iam_policy" "my_bucket_policy" {
+  name = "my-bucket-policy"
+
+  policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": [
+        "s3:ListBucket"
+      ],
+      "Effect": "Allow",
+      "Resource": [
+        "${data.aws_s3_bucket.bucket.arn}"
+      ]
+    }
+  ]
+}
+POLICY
+}
+
+code
+
+
+..................................note..........................................
+As you can see from the above project a data source block starts with the word data. The next word
+is the type of data source. We are using a aws_s3_bucket data source, which is used to look up an S3
+bucket. After the data source type, we give the data source an identifier in this case "bucket". The
+identifier is used to reference the data source inside the Terraform project. The data source block is
+then opened with a {. You then specify any properties you want Terraform to use to search for the
+resource. We are using the complete name of the S3 bucket we are looking for. You then close the
+data source block with }.
+Rather than creating the bucket as we did before this time we are referencing a bucket that
+already exists. So before you run the above project you will need to create an S3 bucket with
+the name that you specify inside the data block. In the example above the bucket would be called
+hariom12380. Name the bucket anything you want but then paste the name into
+the bucket property in the data source.
+At the bottom of this project we are creating an AWS IAM policy which gives permissions to list
+the bucket that we looked up in the data source. There are a couple of new concepts in the aws_-
+iam_policy resource that I want to introduce. The IAM policy itself is a multi line string enclosed
+in between <<POLICY and POLICY. This is how you define a multi line string in Terraform. You open
+the multi line string with << then you place any identifier you wish as a single word. I have used
+POLICY in the example above as I am defining an IAM policy but you could have used anything like
+<<STATEMENT or <<IAM. You then start your multi line string on the next line and to finish it you use
+the opening identifier without the <<. Note the closing marker must be at the start of a new line
+otherwise it is a syntax error.
+Inside the IAM policy we are using the S3 bucket data source. We are taking the arn from the
+S3 bucket so that we can use it in our IAM policy. You will notice that to get the value we are
+using the interpolation syntax ${data.aws_s3_bucket.bucket.arn}. The opening ${ and closing
+} is needed because we are inside a multi line string so it is telling terraform that we want it to
+evaluate the value of this and not use it as a string literal. The format of a data source expression
+is data.<data_type>.<data_identifier>.<attribute_name>. You can get a full list of the attributes
+that a data resource provides from the documentation website of the provider.
+To run this project go to the terminal and cd into the folder where you created the main.tf file. Run
+terraform init to initialise Terraform and then terraform apply. When Terraform runs you will
+see that it only created a single resource, the IAM policy. This is because the S3 bucket we are using
+is created outside of Terraform.
+..................................note..........................................
+
+chapter 6 ends
