@@ -1,0 +1,53 @@
+output
+
+code
+
+output "message" {
+  value = "Hello-Teraaform-User"
+}
+
+code
+
+
+Try running this project by opening your terminal. Changing directory into the folder that you
+created where the main.tf file is and then running terraform init and terraform apply. You will
+see that Terraform runs and then prints the following:
+
+Apply complete! Resources: 0 added, 0 changed, 0 destroyed.
+
+Outputs:
+
+message = Hello-Terraform-user
+
+OUTPUT RESOURCE PROPERTIES
+
+The first example is pretty basic and in the real world probably not very useful. Outputs are much
+more useful when used to output the values of resources that have been created as part of a Terraform
+run. Lets create another Terraform project and do that. Create a new folder and create a single
+file called main.tf then paste in the following code
+
+CODE
+
+provider "aws" {
+  region = "us-east-1"
+}
+
+resource "aws-s3-bucket" "first_bucket"
+  bucket = "kelholditch-bucket-output"
+}
+
+output "bucket_name" {
+ value = "aws_s3_bucket.first_bucket.id
+}
+
+output "bucket_arn" {
+  value = "aws_s3_bucket.first_bucket.arn
+}
+
+output "bucket_information" {
+  value = "bucket name: ${aws_s3_bucket.first_bucket.id}, bucket arn: ${aws_s3_bucket.first_bucket.arn}"
+}
+
+CODE
+
+CHAPTER 7 ENDS
