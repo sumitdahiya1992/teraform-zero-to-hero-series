@@ -1,0 +1,47 @@
+locals
+
+A local is Terraform’s representation of a normal programming languages’s variable. Confusingly
+Terraform also has a concept called a variable which is really an input, variables are covered in
+chapter 10. A local can refer to a fixed value such as a string or it can be used to refer to an expression
+such as two other locals concatenated together or the attribute of a resource that you have created.
+Lets dive into an example. Create a new folder in your workspace and create a single file inside it
+called main.tf
+
+code
+
+provider "aws" {
+  region = "us-east-1"
+}
+
+locals {
+  first_part  = "hari"
+  second_part = "${local.first_part}-om"
+  bucket_name = "${local.second_part}-12380"
+}
+
+resource "aws_s3_bucket" "bucket" {
+  bucket = local.bucket_name
+}
+
+code
+
+In the code above we define a local block by using the keyword locals and then an opening {.
+We then define each local on a new line by giving it a name. The first local we define is called
+first_part. You then follow it with an = and then give it a value. For the first_part local we
+are giving it the value of the string literal hello. For the second local second_part we are using
+the value "${local.first_part}-there". As the whole expression is inside quotes we need to use
+the ${ and } around our expression so Terraform evaluates it. To reference a local you use the
+expression syntax local.local_identifier. So the second_part local will be set to “hello-there”.
+In the bucket_name local we are using the second_part local in the expression "${local.second_-
+part}-how-are-you-today" which will evaluate to hello-there-how-are-you-today.
+At the bottom of the project we are defining an S3 bucket and setting the name to local.bucket_-
+name, so this will create an S3 bucket with the name hello-there-how-are-you-today. Note we
+do not need the ${ and } as we are not inside quotes here. We could also have set the bucket to
+"${local.bucket_name}", which would have evaluated to the same thing. But since Terraform 0.12>
+we can now omit the ${ and } for a single line expression where we are using the whole value. Which
+I think makes the code cleaner and easier to read. As we are defining our infrastructure as code the
+easier it is to read the better.
+To run the project go to the terminal and cd into the folder where you created the file main.tf.
+Run terraform init and then terraform apply. When prompted say yes if you want to run in the
+project. This will create the S3 bucket with the name hello-there-how-are-you-today. To destroy
+this infrastructure run terraform destroy and then confirm.
