@@ -1,0 +1,144 @@
+Templates and Files
+
+
+vim main.tf
+
+code
+
+provider "aws" {
+  region = "us-east-1"
+  version = "~> 2.27"
+}
+
+resource "aws_iam_policy" "my_bucket_policy" {
+  name = "list-bucket-policy"
+  policy = file("./policy.iam")
+}
+
+Create another file in same directory
+vim policy.iam
+
+code
+
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+     "Action": [
+       "s3:ListBucket"
+     ],
+     "Effect": "Allow",
+     "Resource": "*"
+    }
+   ]
+}
+
+code
+
+....................note......................
+
+This IAM policy creates a policy that gives list bucket permission to any bucket. If you look at the
+Terraform code you will see we are configuring the AWS provider as we are going to be connecting
+to AWS. Then we are defining an AWS IAM policy. Instead of placing the policy inline as we did in
+a previous chapter, we are referencing the policy from the file policy.iam. To do this we are calling
+the file function and passing in the argument as to where the file is. Note this is a relative file path
+from our current location.
+When we run this project by doing terraform init and terraform apply and confirm by typing
+yes, Terraform will create the IAM policy you can see in the file and name it list-buckets-policy.
+
+....................note......................
+
+TEMPLATESFILE FUNCTION
+
+Sometimes we want to use a file but we do not know all of the values before we run the project or
+some of the values are dynamic and generated as a result of a created resource. To be able to use
+dynamic values in a file we need to use the templatefile function.
+The templatefile function allows you to define placeholders in a template file and then pass their
+values at runtime.
+
+vim main.tf
+
+CODE
+
+locals {
+  rendered = templatefile("./example.tpl", { name = "kevin", number = 7 } )
+}
+
+output "rendered_template" {
+  value = local.rendered
+}
+
+CODE
+
+vim example.tf
+
+code
+
+hello there ${name}
+there are ${number} things to say
+
+code
+
+.............................note..........................
+Lets walk through the code we have written so we can understand what is going on. We are defining
+a local (as we learnt in the previous chapter) called rendered. We are setting the value of the local
+(remember a local can have a value that is an expression) to the result of calling the templatefile
+function. The template file function takes two arguments. The first argument is the path to the
+template file, in this example we are using the relative path between the main.tf and the template
+file example.tpl so the path is ./example.tpl. The next parameter is a set of variables that you want
+replacing in your template. We are passing in a value for name (kevin) and number (7). Note you couldChapter 9 - Templates and Files
+32
+set the value of these variables to any expression such as another local or an attribute from a created
+resource or a data source.
+If you look at the example template code we use the syntax ${<variable_name>} when we want to
+reference a passed in variable. Terraform will replace ${name} in our template with the value passed
+in for name, it will do the same with ${number}.
+We are then using an output to output the rendered value of the template out to the terminal. This
+is an easy way for us to see how the templatefile function works.
+Lets see templates in action. Go to your terminal, change directory into the new project folder you
+have just created and run terraform init and then terraform apply. You will see the following
+output rendered:
+.............................note..........................
+
+
+
+LOOPS IN  A TEMPLATES
+
+You can pass in an array of values into a template and loop round them. Lets take a look at an
+example of how to do that. Create a new folder, create a file called main.tf
+
+vim main.tf
+
+CODE
+
+output "rendered_template" {
+  value = templatefile("./backends.tpl", { port = 8080, ip_addrs = ["10.0.0.1", "10.0.0.2"] })
+}
+
+CODE
+vim backends.tpl
+
+code
+
+%{ for addrs in ip_addrs ~}
+backend ${addrs}:${port}
+%{ endfor ~}
+
+code
+
+...........................note...........................
+
+This time we are just rendering the template straight to the output. Notice that we are passing in
+an array for ip_addrs. In the template we are then looping around the ip_addrs array by using a
+foreach loop. To do a foreach loop you use the syntax %{ for <var> in <variable_name ∼} where
+<var> is any identifier you want to use to reference the current looped item and <variable_name>
+is the name of the array that is passed into the template. All of the lines you now write are inside
+the loop until you signal the end of the loop by putting %{ endfor ∼}. Notice that inside the loop
+we are using the current value from the ip_addr array and we are always referencing the port.
+When we run the above project (by doing terraform init and terraform apply) you will notice
+the following output is rendered for the template:
+
+backend 10.0.0.1:8080
+backend 10.0.0.2:8080
+
+...........................note...........................
